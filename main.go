@@ -40,7 +40,7 @@ var domains []string
 
 var manager autocert.Manager
 
-var defaultTarget = target{"zatiti.com", "zatiti.com", 80, HTTP}
+var defaultTarget = target{"40.74.53.120", "zatiti.com", 80, HTTP}
 
 func findTarget(u *url.URL) (t *target, err error) {
 	// TODO fetch this from the data store
@@ -55,9 +55,9 @@ func director(r *http.Request) {
 	}
 	r.URL.Scheme = t.scheme
 	if t.port == 80 || t.port == 443 {
-		r.URL.Host = t.address
+		r.Host = t.address
 	} else {
-		r.URL.Host = fmt.Sprintf("%s:%s", t.address, t.port)
+		r.Host = fmt.Sprintf("%s:%s", t.address, t.port)
 	}
 	r.Header.Set("Host", t.hostname)
 	if _, ok := r.Header["User-Agent"]; !ok {
@@ -71,7 +71,6 @@ func hostPolicy(context.Context, string) error {
 }
 
 func init() {
-	domains = []string{"zatiti.com"}
 	manager = autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: hostPolicy,
