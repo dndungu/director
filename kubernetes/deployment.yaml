@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: facade
-        image: gcr.io/project-1804904848208322692/github-dndungu-facade:617708dca4158cb8ddb2d2a52c1c7e961010c073
+        image: gcr.io/project-1804904848208322692/github-dndungu-facade:latest
         imagePullPolicy: Always
         resources:
           limits:
