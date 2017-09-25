@@ -8,13 +8,15 @@ COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o facade .
 
-FROM scratch
+FROM alpine:latest
 
 LABEL maintainer "David Ndungu <dnjuguna@gmail.com>"
 
 WORKDIR /bin
 
 COPY --from=builder /go/src/github.com/dndungu/facade/facade .
+
+RUN apk --update add ca-certificates
 
 ENV HTTP_PROXY_PORT 80
 
