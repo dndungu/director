@@ -1,0 +1,39 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: facade
+  labels:
+    project: facade
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      project: facade
+      role: app-server
+  template:
+    metadata:
+      labels:
+        project: facade
+        role: app-server
+    spec:
+      containers:
+      - name: facade
+        image: gcr.io/project-1804904848208322692/github-dndungu-facade:latest
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+        ports:
+          - name: http
+            containerPort: 80
+          - name: https
+            containerPort: 443
