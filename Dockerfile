@@ -8,7 +8,7 @@ COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o facade .
 
-FROM scratch
+FROM alpine:latest
 
 LABEL maintainer "David Ndungu <dnjuguna@gmail.com>"
 
