@@ -14,7 +14,7 @@ LABEL maintainer "David Ndungu <dnjuguna@gmail.com>"
 
 WORKDIR /bin
 
-COPY --from=builder /bin/facade .
+COPY --from=builder /go/src/github.com/dndungu/facade/facade .
 
 ENV HTTP_PROXY_PORT 80
 
