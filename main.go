@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"golang.org/x/crypto/acme/autocert"
 	"log"
@@ -86,10 +87,16 @@ func main() {
 		log.Print(httpServer.ListenAndServe().Error())
 	}()
 
+	pool := x509.NewCertPool()
+	pool.AppendCertsFromPEM(rootCerts)
+
 	httpsServer := &http.Server{
-		Addr:      ":443",
-		TLSConfig: &tls.Config{GetCertificate: manager.GetCertificate},
-		Handler:   &proxy,
+		Addr: ":443",
+		TLSConfig: &tls.Config{
+			GetCertificate: manager.GetCertificate,
+			RootCAs:        pool,
+		},
+		Handler: &proxy,
 	}
 
 	go func() {
