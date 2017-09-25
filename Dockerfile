@@ -2,9 +2,9 @@ FROM golang:1.9 as builder
 
 LABEL maintainer "David Ndungu <dnjuguna@gmail.com>"
 
-WORKDIR /bin
+WORKDIR /go/src/github.com/dndungu/facade
 
-COPY main.go .
+COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o facade .
 
