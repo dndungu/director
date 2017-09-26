@@ -39,7 +39,7 @@ var domains []string
 
 var manager autocert.Manager
 
-var defaultTarget = target{"40.74.53.120", "zatiti.com", 80, HTTP}
+var defaultTarget = target{"10.11.243.184", "support.zd-pod.com", 80, HTTP}
 
 func findTarget(u *url.URL) (t *target, err error) {
 	// TODO fetch this from the data store
