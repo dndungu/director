@@ -39,10 +39,12 @@ const (
 
 var manager autocert.Manager
 
+var upstreamHost string
+
 func findTarget(r *http.Request) target {
 	hostArray := strings.Split(r.Host, ".")
 	address := fmt.Sprintf("nginx.%s.svc.cluster.local", hostArray[0])
-	return target{address, "support.zd-dev.com", 443, HTTPS}
+	return target{address, upstreamHost, 443, HTTPS}
 }
 
 func director(r *http.Request) {
@@ -65,6 +67,11 @@ func hostPolicy(context.Context, string) error {
 }
 
 func init() {
+	var ok bool
+	upstreamHost, ok = os.LookupEnv("UPSTREAM_HOST")
+	if !ok {
+		panic("UPSTREAM_HOST environment variable is not set.")
+	}
 	manager = autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: hostPolicy,
