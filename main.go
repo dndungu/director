@@ -8,9 +8,9 @@ import (
 	"log"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 )
 
 type source struct {
@@ -35,23 +35,16 @@ const (
 	HTTPS = "https"
 )
 
-var domains []string
-
 var manager autocert.Manager
 
-var defaultTarget = target{"10.11.243.184", "support.zd-pod.com", 80, HTTP}
-
-func findTarget(u *url.URL) (t *target, err error) {
-	// TODO fetch this from the data store
-	t = &defaultTarget
-	return t, err
+func findTarget(r *http.Request) target {
+	hostArray := strings.Split(r.URL.Host, ".")
+	address := fmt.Sprintf("nginx.%s.svc.cluster.local", hostArray[0])
+	return target{address, "support.zd-dev.com", 443, HTTPS}
 }
 
 func director(r *http.Request) {
-	t, err := findTarget(r.URL)
-	if err != nil {
-		t = &defaultTarget
-	}
+	t := findTarget(r)
 	r.URL.Scheme = t.scheme
 	if t.port == 80 || t.port == 443 {
 		r.URL.Host = t.address

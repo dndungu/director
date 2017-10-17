@@ -1,24 +1,24 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: facade
+  name: director
   labels:
-    project: facade
+    project: director
 spec:
   replicas: 1
   selector:
     matchLabels:
-      project: facade
+      project: director
       role: app-server
   template:
     metadata:
       labels:
-        project: facade
+        project: director
         role: app-server
     spec:
       containers:
-      - name: facade
-        image: gcr.io/project-1804904848208322692/github-dndungu-facade:latest
+      - name: director
+        image: gcr.io/project-1804904848208322692/github-dndungu-director:latest
         imagePullPolicy: Always
         resources:
           limits:

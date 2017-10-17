@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: facade
+  name: director
   labels:
-    project: facade
+    project: director
 spec:
   selector:
-    project: facade
+    project: director
     role: app-server
   ports:
     -
