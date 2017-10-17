@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"golang.org/x/crypto/acme/autocert"
 	"log"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"os"
 	"os/signal"
 	"strings"
+	"time"
 )
 
 type source struct {
@@ -70,7 +72,20 @@ func init() {
 }
 
 func main() {
-	proxy := httputil.ReverseProxy{Director: director}
+	transport := &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          1000,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	proxy := httputil.ReverseProxy{Director: director, Transport: transport}
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 	httpServer := http.Server{Addr: ":80", Handler: &proxy}
@@ -81,7 +96,8 @@ func main() {
 	httpsServer := &http.Server{
 		Addr: ":443",
 		TLSConfig: &tls.Config{
-			GetCertificate: manager.GetCertificate,
+			GetCertificate:     manager.GetCertificate,
+			InsecureSkipVerify: true,
 		},
 		Handler: &proxy,
 	}
