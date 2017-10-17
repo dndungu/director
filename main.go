@@ -38,7 +38,7 @@ const (
 var manager autocert.Manager
 
 func findTarget(r *http.Request) target {
-	hostArray := strings.Split(r.URL.Host, ".")
+	hostArray := strings.Split(r.Host, ".")
 	address := fmt.Sprintf("nginx.%s.svc.cluster.local", hostArray[0])
 	return target{address, "support.zd-dev.com", 443, HTTPS}
 }
