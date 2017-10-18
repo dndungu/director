@@ -5,7 +5,7 @@ metadata:
   labels:
     project: director
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       project: director
@@ -20,6 +20,9 @@ spec:
       - name: director
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        - name: "UPSTREAM_HOST"
+          value: "support.zd-dev.com"
         resources:
           limits:
             cpu: 200m

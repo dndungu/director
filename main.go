@@ -41,9 +41,13 @@ var manager autocert.Manager
 
 var upstreamHost string
 
+var upstreamService string
+
+var CommitSha string
+
 func findTarget(r *http.Request) target {
 	hostArray := strings.Split(r.Host, ".")
-	address := fmt.Sprintf("nginx.%s.svc.cluster.local", hostArray[0])
+	address := fmt.Sprintf("%s.%s.svc.cluster.local", upstreamService, hostArray[0])
 	return target{address, upstreamHost, 443, HTTPS}
 }
 
@@ -68,6 +72,10 @@ func hostPolicy(context.Context, string) error {
 
 func init() {
 	var ok bool
+	upstreamService, ok = os.LookupEnv("UPSTREAM_SERVICE")
+	if !ok {
+		panic("UPSTREAM_SERVICE environment variable is not set.")
+	}
 	upstreamHost, ok = os.LookupEnv("UPSTREAM_HOST")
 	if !ok {
 		panic("UPSTREAM_HOST environment variable is not set.")
@@ -75,24 +83,29 @@ func init() {
 	manager = autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: hostPolicy,
+		Cache:      autocert.DirCache("/etc/director/certificates"),
 	}
 }
 
+var transport = &http.Transport{
+	Proxy: http.ProxyFromEnvironment,
+	DialContext: (&net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+		DualStack: true,
+	}).DialContext,
+	MaxIdleConns:          1000,
+	IdleConnTimeout:       90 * time.Second,
+	TLSHandshakeTimeout:   10 * time.Second,
+	ExpectContinueTimeout: 1 * time.Second,
+	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+}
+
 func main() {
-	transport := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-			DualStack: true,
-		}).DialContext,
-		MaxIdleConns:          1000,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
+	proxy := httputil.ReverseProxy{
+		Director:  director,
+		Transport: transport,
 	}
-	transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	proxy := httputil.ReverseProxy{Director: director, Transport: transport}
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 	httpServer := http.Server{Addr: ":80", Handler: &proxy}
@@ -112,6 +125,7 @@ func main() {
 	go func() {
 		log.Print(httpsServer.ListenAndServeTLS("", ""))
 	}()
+	log.Print(fmt.Sprintf("Director version %s is listening on ports :80 and :443", CommitSha))
 	<-stop
 	httpServer.Shutdown(context.Background())
 	httpsServer.Shutdown(context.Background())
