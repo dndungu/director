@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"golang.org/x/crypto/acme/autocert"
 	"log"
+	"net"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
 	"os"
 	"os/signal"
+	"strings"
+	"time"
 )
 
 type source struct {
@@ -19,10 +21,9 @@ type source struct {
 }
 
 type target struct {
-	address  string
-	hostname string
-	port     int
-	scheme   string
+	address string
+	port    int
+	scheme  string
 }
 
 type rule struct {
@@ -35,30 +36,29 @@ const (
 	HTTPS = "https"
 )
 
-var domains []string
-
 var manager autocert.Manager
 
-var defaultTarget = target{"10.11.243.184", "support.zd-pod.com", 80, HTTP}
+var targetHost string
 
-func findTarget(u *url.URL) (t *target, err error) {
-	// TODO fetch this from the data store
-	t = &defaultTarget
-	return t, err
+var CommitSha string
+
+func findTarget(r *http.Request) target {
+	address := fmt.Sprintf(
+		"%s.%s.svc.cluster.local",
+		targetHost,
+		strings.Split(r.Host, ".")[0],
+	)
+	return target{address, 443, HTTPS}
 }
 
 func director(r *http.Request) {
-	t, err := findTarget(r.URL)
-	if err != nil {
-		t = &defaultTarget
-	}
+	t := findTarget(r)
 	r.URL.Scheme = t.scheme
 	if t.port == 80 || t.port == 443 {
 		r.URL.Host = t.address
 	} else {
 		r.URL.Host = fmt.Sprintf("%s:%s", t.address, t.port)
 	}
-	r.Host = t.hostname
 	if _, ok := r.Header["User-Agent"]; !ok {
 		r.Header.Set("User-Agent", "")
 	}
@@ -70,14 +70,37 @@ func hostPolicy(context.Context, string) error {
 }
 
 func init() {
+	var ok bool
+	targetHost, ok = os.LookupEnv("TARGET_HOST")
+	if !ok {
+		panic("TARGET_HOST environment variable is not set.")
+	}
 	manager = autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: hostPolicy,
+		Cache:      autocert.DirCache("/etc/director/certificates"),
 	}
 }
 
+var transport = &http.Transport{
+	Proxy: http.ProxyFromEnvironment,
+	DialContext: (&net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+		DualStack: true,
+	}).DialContext,
+	MaxIdleConns:          1000,
+	IdleConnTimeout:       90 * time.Second,
+	TLSHandshakeTimeout:   10 * time.Second,
+	ExpectContinueTimeout: 1 * time.Second,
+	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
+}
+
 func main() {
-	proxy := httputil.ReverseProxy{Director: director}
+	proxy := httputil.ReverseProxy{
+		Director:  director,
+		Transport: transport,
+	}
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 	httpServer := http.Server{Addr: ":80", Handler: &proxy}
@@ -88,7 +111,8 @@ func main() {
 	httpsServer := &http.Server{
 		Addr: ":443",
 		TLSConfig: &tls.Config{
-			GetCertificate: manager.GetCertificate,
+			GetCertificate:     manager.GetCertificate,
+			InsecureSkipVerify: true,
 		},
 		Handler: &proxy,
 	}
@@ -96,6 +120,7 @@ func main() {
 	go func() {
 		log.Print(httpsServer.ListenAndServeTLS("", ""))
 	}()
+	log.Print(fmt.Sprintf("Director version %s is listening on ports :80 and :443", CommitSha))
 	<-stop
 	httpServer.Shutdown(context.Background())
 	httpsServer.Shutdown(context.Background())
