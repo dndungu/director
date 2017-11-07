@@ -1,0 +1,42 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: director
+  labels:
+    project: director
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      project: director
+      role: server
+  template:
+    metadata:
+      labels:
+        project: director
+        role: server
+    spec:
+      containers:
+      - name: director
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+        {{- range .Values.env }}
+        - name: {{ .name }}
+          value: {{ .value}}
+        {{- end }}
+        volumeMounts:
+          - name: certificates
+            mountPath: /etc/director/certificates
+        ports:
+        {{- range $k, $v := .Values.ports }}
+        - name: {{ $k}}
+          containerPort: {{ .port}}
+        {{- end }}
+        resources:
+{{ toYaml .Values.resources | indent 12 }}
+      volumes:
+        - name: certificates
+          gcePersistentDisk:
+            pdName: ssl-certificates
+            fsType: ext4

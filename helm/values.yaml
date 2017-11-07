@@ -1,5 +1,0 @@
-replicaCount: 1
-image:
-  repository: gcr.io/docker-image-builder-179319/github-zendesk-director
-  tag: 2d9181593653aa2e8c6b97769ff95794af27d622
-  pullPolicy: IfNotPresent

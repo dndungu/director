@@ -1,0 +1,19 @@
+replicaCount: 1
+image:
+  repository: gcr.io/docker-image-builder-179319/github-zendesk-director
+  tag: ed27c3a9e26b15f88eece9dc0f3632fb16e8ac17
+  pullPolicy: IfNotPresent
+name: director
+env:
+  target_host:
+    name: "TARGET_HOST"
+    value: "nginx"
+ports:
+  http:
+    port: 80
+  https:
+    port: 443
+resources:
+  limits:
+    cpu: 200m
+    memory: 1024Mi
