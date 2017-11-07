@@ -6,7 +6,9 @@ WORKDIR /go/src/github.com/dndungu/director
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o director .
+ARG COMMIT_SHA
+
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o director -ldflags "-X main.CommitSha=${COMMIT_SHA}" .
 
 FROM alpine:latest
 
