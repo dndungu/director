@@ -38,13 +38,16 @@ const (
 
 var manager autocert.Manager
 
-var upstreamService string
+var targetHost string
 
 var CommitSha string
 
 func findTarget(r *http.Request) target {
-	hostArray := strings.Split(r.Host, ".")
-	address := fmt.Sprintf("%s.%s.svc.cluster.local", upstreamService, hostArray[0])
+	address := fmt.Sprintf(
+		"%s.%s.svc.cluster.local",
+		targetHost,
+		strings.Split(r.Host, ".")[0],
+	)
 	return target{address, 443, HTTPS}
 }
 
@@ -68,9 +71,9 @@ func hostPolicy(context.Context, string) error {
 
 func init() {
 	var ok bool
-	upstreamService, ok = os.LookupEnv("UPSTREAM_SERVICE")
+	targetHost, ok = os.LookupEnv("TARGET_HOST")
 	if !ok {
-		panic("UPSTREAM_SERVICE environment variable is not set.")
+		panic("TARGET_HOST environment variable is not set.")
 	}
 	manager = autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
