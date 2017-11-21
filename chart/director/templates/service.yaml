@@ -9,10 +9,10 @@ spec:
     project: {{ .Values.name }}
     role: server
   ports:
-    {{- range $k := .Values.ports }}
+    {{- range $k, $v := .Values.ports }}
     -
       name: {{ $k }}
-      port: {{ .port}}
+      port: {{ $v }}
       targetPort: {{ $k }}
     {{- end }}
   type: LoadBalancer

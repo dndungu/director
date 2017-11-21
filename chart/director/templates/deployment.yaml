@@ -30,8 +30,8 @@ spec:
             mountPath: /etc/director/certificates
         ports:
         {{- range $k, $v := .Values.ports }}
-        - name: {{ $k}}
-          containerPort: {{ .port}}
+        - name: {{ $k }}
+          containerPort: {{ $v }}
         {{- end }}
         resources:
 {{ toYaml .Values.resources | indent 12 }}
