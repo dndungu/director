@@ -46,7 +46,7 @@ func findTarget(r *http.Request) target {
 	address := fmt.Sprintf(
 		"%s.%s.svc.cluster.local",
 		targetHost,
-		strings.Split(r.Host, ".")[0],
+		strings.Split(r.Host, ".")[1],
 	)
 	return target{address, 443, HTTPS}
 }
