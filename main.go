@@ -73,7 +73,7 @@ func init() {
 	var ok bool
 	targetHost, ok = os.LookupEnv("TARGET_HOST")
 	if !ok {
-		panic("TARGET_HOST environment variable is not set.")
+		log.Fatal("TARGET_HOST environment variable is not set.")
 	}
 	manager = autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
