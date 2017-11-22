@@ -48,7 +48,7 @@ func findTarget(r *http.Request) target {
 		targetHost,
 		strings.Split(r.Host, ".")[1],
 	)
-	return target{address, 443, HTTPS}
+	return target{address, 80, HTTP}
 }
 
 func director(r *http.Request) {
