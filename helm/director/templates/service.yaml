@@ -7,7 +7,6 @@ metadata:
 spec:
   selector:
     project: {{ .Values.name }}
-    role: server
   ports:
     {{- range $k, $v := .Values.ports }}
     -

@@ -1,7 +1,7 @@
 replicaCount: 1
 image:
   repository: dndungu/director
-  tag: latest
+  tag: sha256:facc95981782d7d6ba1c93997230309fb2d686be4f9c34b6c19d2ee1808830be
   pullPolicy: Always
 name: director
 env:

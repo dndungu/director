@@ -1,5 +1,5 @@
-apiVersion: extensions/v1beta1
-kind: Deployment
+apiVersion: apps/v1beta2
+kind: StatefulSet
 metadata:
   name: director
   labels:
@@ -9,16 +9,15 @@ spec:
   selector:
     matchLabels:
       project: director
-      role: server
+  serviceName: director
   template:
     metadata:
       labels:
         project: director
-        role: server
     spec:
       containers:
       - name: director
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        image: "{{ .Values.image.repository }}@{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
         {{- range .Values.env }}
@@ -26,7 +25,7 @@ spec:
           value: {{ .value}}
         {{- end }}
         volumeMounts:
-          - name: certificates
+          - name: ssl-certificates
             mountPath: /etc/director/certificates
         ports:
         {{- range $k, $v := .Values.ports }}
@@ -36,7 +35,6 @@ spec:
         resources:
 {{ toYaml .Values.resources | indent 12 }}
       volumes:
-        - name: certificates
-          gcePersistentDisk:
-            pdName: ssl-certificates
-            fsType: ext4
+        - name: ssl-certificates
+          persistentVolumeClaim:
+            claimName: ssl-certificates
