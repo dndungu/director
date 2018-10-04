@@ -1,4 +1,4 @@
-FROM golang:1.9 as builder
+FROM golang:1.11 as builder
 
 LABEL maintainer "David Ndungu <dnjuguna@gmail.com>"
 
@@ -7,6 +7,10 @@ WORKDIR /go/src/github.com/dndungu/director
 COPY . .
 
 ARG SOURCE_COMMIT
+
+RUN go get -u github.com/golang/dep/cmd/dep
+
+RUN dep ensure
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o director -ldflags "-X main.CommitSha=${SOURCE_COMMIT}" .
 
