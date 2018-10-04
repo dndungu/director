@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: director
+  labels:
+    project: director
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      project: director
+  serviceName: director
+  template:
+    metadata:
+      labels:
+        project: director
+    spec:
+      containers:
+      - name: director
+        image: "dndungu/director:latest"
+        imagePullPolicy: Always
+        env:
+        - name: HOSTNAME
+          value: ""
+        - name: TARGET_HOST
+          value: ""
+        - name: TARGET_PORT
+          value: ""
+        volumeMounts:
+          - name: ssl-certificates
+            mountPath: /etc/director/certificates
+        ports:
+        - name: http
+          containerPort: 80
+        - name: https
+          containerPort: 443
+        resources:
+            limits:
+              cpu: 200m
+              memory: 1024Mi
+      volumes:
+        - name: ssl-certificates
+          persistentVolumeClaim:
+            claimName: ssl-certificates
