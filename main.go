@@ -52,7 +52,7 @@ func director(r *http.Request) {
 	if t.port == 80 || t.port == 443 {
 		r.URL.Host = t.address
 	} else {
-		r.URL.Host = fmt.Sprintf("%s:%s", t.address, t.port)
+		r.URL.Host = fmt.Sprintf("%s:%d", t.address, t.port)
 	}
 	if _, ok := r.Header["User-Agent"]; !ok {
 		r.Header.Set("User-Agent", "")
