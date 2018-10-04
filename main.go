@@ -110,7 +110,7 @@ func main() {
 	}
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
-	httpServer := http.Server{Addr: ":80", Handler: &proxy}
+	httpServer := http.Server{Addr: ":80", Handler: manager.HTTPHandler(&proxy)}
 	go func() {
 		log.Print(httpServer.ListenAndServe().Error())
 	}()
@@ -118,8 +118,7 @@ func main() {
 	httpsServer := &http.Server{
 		Addr: ":443",
 		TLSConfig: &tls.Config{
-			GetCertificate:     manager.GetCertificate,
-			InsecureSkipVerify: true,
+			GetCertificate: manager.GetCertificate,
 		},
 		Handler: &proxy,
 	}
