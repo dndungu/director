@@ -1,2 +1,2 @@
 # Director
-A minimal SSL termination reverse proxy server.
+A minimal HTTPS termination reverse proxy server.
