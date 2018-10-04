@@ -11,7 +11,7 @@ import (
 	"net/http/httputil"
 	"os"
 	"os/signal"
-	"strings"
+	"strconv"
 	"time"
 )
 
@@ -42,7 +42,7 @@ var hostname string
 
 var targetHost string
 
-var targetPort string
+var targetPort int
 
 var CommitSha string
 
@@ -70,9 +70,16 @@ func init() {
 		log.Fatal("TARGET_HOST environment variable is not set.")
 	}
 
-	targetPort, ok = os.LookupEnv("TARGET_PORT")
+	port, ok := os.LookupEnv("TARGET_PORT")
 	if !ok {
 		log.Fatal("TARGET_PORT environment variable is not set.")
+
+	}
+
+	var err error
+	targetPort, err = strconv.Atoi(port)
+	if err != nil {
+		log.Fatal(err.Error())
 	}
 
 	manager = autocert.Manager{
