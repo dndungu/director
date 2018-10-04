@@ -38,21 +38,16 @@ const (
 
 var manager autocert.Manager
 
+var hostname string
+
 var targetHost string
+
+var targetPort string
 
 var CommitSha string
 
-func findTarget(r *http.Request) target {
-	address := fmt.Sprintf(
-		"%s.%s.svc.cluster.local",
-		targetHost,
-		strings.Split(r.Host, ".")[1],
-	)
-	return target{address, 80, HTTP}
-}
-
 func director(r *http.Request) {
-	t := findTarget(r)
+	t := target{targetHost, targetPort, HTTP}
 	r.URL.Scheme = t.scheme
 	if t.port == 80 || t.port == 443 {
 		r.URL.Host = t.address
@@ -64,20 +59,25 @@ func director(r *http.Request) {
 	}
 }
 
-func hostPolicy(context.Context, string) error {
-	// TODO only allow while listed domains and subdomains
-	return nil
-}
-
 func init() {
 	var ok bool
+	hostname, ok = os.LookupEnv("HOSTNAME")
+	if !ok {
+		log.Fatal("HOSTNAME environment variable is not set.")
+	}
 	targetHost, ok = os.LookupEnv("TARGET_HOST")
 	if !ok {
 		log.Fatal("TARGET_HOST environment variable is not set.")
 	}
+
+	targetPort, ok = os.LookupEnv("TARGET_PORT")
+	if !ok {
+		log.Fatal("TARGET_PORT environment variable is not set.")
+	}
+
 	manager = autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
-		HostPolicy: hostPolicy,
+		HostPolicy: autocert.HostWhitelist(hostname),
 		Cache:      autocert.DirCache("/etc/director/certificates"),
 	}
 }
