@@ -104,6 +104,7 @@ var transport = &http.Transport{
 }
 
 func redirect(w http.ResponseWriter, r *http.Request) {
+	r.Scheme = "https"
 	http.Redirect(w, r, r.URL.String(), http.StatusMovedPermanently)
 }
 
