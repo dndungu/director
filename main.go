@@ -103,6 +103,10 @@ var transport = &http.Transport{
 	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
 }
 
+func redirect(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, r.URL.String(), http.StatusMovedPermanently)
+}
+
 func main() {
 	proxy := httputil.ReverseProxy{
 		Director:  director,
@@ -110,7 +114,10 @@ func main() {
 	}
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
-	httpServer := http.Server{Addr: ":80", Handler: manager.HTTPHandler(&proxy)}
+	httpServer := http.Server{
+		Addr:    ":80",
+		Handler: manager.HTTPHandler(http.HandlerFunc(redirect)),
+	}
 	go func() {
 		log.Print(httpServer.ListenAndServe().Error())
 	}()
