@@ -14,15 +14,15 @@ RUN dep ensure
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o director -ldflags "-X main.CommitSha=${COMMIT_SHA}" .
 
-FROM alpine:latest
+FROM scratch
 
 LABEL maintainer "David Ndungu <dnjuguna@gmail.com>"
+
+COPY --from=builder /etc/ssl /etc/ssl
 
 WORKDIR /bin
 
 COPY --from=builder /go/src/github.com/dndungu/director/director .
-
-RUN apk --update add ca-certificates
 
 ENV HTTP_PROXY_PORT 80
 
