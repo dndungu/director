@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -104,8 +105,12 @@ var transport = &http.Transport{
 }
 
 func redirect(w http.ResponseWriter, r *http.Request) {
-	r.URL.Scheme = "https"
-	http.Redirect(w, r, r.URL.String(), http.StatusMovedPermanently)
+	u := url.URL{}
+	u.Host = r.Host
+	u.Path = r.URL.Path
+	u.RawQuery = r.URL.RawQuery
+	u.Scheme = "https"
+	http.Redirect(w, r, u.String(), http.StatusMovedPermanently)
 }
 
 func main() {
