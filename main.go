@@ -9,7 +9,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httputil"
-	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -104,15 +103,6 @@ var transport = &http.Transport{
 	TLSClientConfig:       &tls.Config{InsecureSkipVerify: true},
 }
 
-func redirect(w http.ResponseWriter, r *http.Request) {
-	u := url.URL{}
-	u.Host = r.Host
-	u.Path = r.URL.Path
-	u.RawQuery = r.URL.RawQuery
-	u.Scheme = "https"
-	http.Redirect(w, r, u.String(), http.StatusMovedPermanently)
-}
-
 func main() {
 	proxy := httputil.ReverseProxy{
 		Director:  director,
@@ -122,7 +112,7 @@ func main() {
 	signal.Notify(stop, os.Interrupt)
 	httpServer := http.Server{
 		Addr:    ":80",
-		Handler: manager.HTTPHandler(http.HandlerFunc(redirect)),
+		Handler: manager.HTTPHandler(nil),
 	}
 	go func() {
 		log.Print(httpServer.ListenAndServe().Error())
